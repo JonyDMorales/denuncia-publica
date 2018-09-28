@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Codigopostal;
+
 use App\Denuncia;
+use App\Configuraciones;
 use App\Token;
 use Illuminate\Http\File;
 use Illuminate\Http\Request;
@@ -12,7 +14,11 @@ class DenunciaController extends Controller
 {
 
     public function formulario() {
-        return view('denuncia.formulario');
+        $id = '5b9c35f4c489b90496853a3e';
+        $configuraciones = Configuraciones::project(['tipos' => 1, 'fields' => 1])->findOrFail($id);
+        return view('denuncia.formulario')
+            ->with('tipos', $configuraciones->tipos)
+            ->with('fields', $configuraciones->fields);
     }
 
     public function generarTokens(Request $request){
@@ -79,6 +85,10 @@ class DenunciaController extends Controller
             $denuncia->nosotros = (boolean)$request->nosotros;
             $denuncia->fecha = date('Y-m-d H:i:s', strtotime($request->fecha));
 
+            if($request->has('fields')){
+
+            }
+
             if ($request->has('nombre')){
                 $denuncia->nombre = $request->nombre;
             }
@@ -123,7 +133,7 @@ class DenunciaController extends Controller
     }
 
     public function buscaCodigoPostal(Request $request){
-        if($request->isMethod('get')){
+        if($request->isMethod('post')){
             $this ->validate($request, ['cp' => 'bail|required|numeric']);
             $cp = $request -> input('cp');
             $direccion = Codigopostal::project(['Codigo' => 1,

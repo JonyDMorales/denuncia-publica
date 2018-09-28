@@ -17,11 +17,17 @@
                             <label>Tipo de denuncia: <span style="color: red">*</span></label>
                             <select class="form-control" name="tipo" id="tipo" required>
                                 <option value="">Selecciona:</option>
-                                <option value="Violencia">Violencia</option>
-                                <option value="Acarreo o compra de votos">Acarreo o compra de votos</option>
-                                <option value="Problemas en casilla">Problemas en casilla</option>
-                                <option value="Condicionamiento del voto">Condicionamiento del voto</option>
-                                <option value="Otros">Otros</option>
+                                @if(isset($tipos))
+                                    @foreach($tipos as $tipo)
+                                        <option value="{{ $tipo }}">{{ $tipo }}</option>
+                                    @endforeach
+                                @else
+                                    <option value="Violencia">Violencia</option>
+                                    <option value="Acarreo o compra de votos">Acarreo o compra de votos</option>
+                                    <option value="Problemas en casilla">Problemas en casilla</option>
+                                    <option value="Condicionamiento del voto">Condicionamiento del voto</option>
+                                    <option value="Otros">Otros</option>
+                                @endif
                             </select>
                         </div>
                         <div class="form-group">
@@ -34,16 +40,16 @@
                         </div>
                         <div class="form-group">
                             <label>Estado: <span style="color: red">*</span></label>
-                            <input type="text" class="form-control" name="estado" value="CDMX" id="estado" disabled="disabled" required>
+                            <input type="text" class="form-control" name="estado" id="estado" disabled="disabled" required>
                         </div>
                         <div class="form-group">
                             <label>Municipio: <span style="color: red">*</span></label>
-                            <input type="text" class="form-control" name="municipio" value="CDMX" id="municipio" disabled="disabled" required>
+                            <input type="text" class="form-control" name="municipio" id="municipio" disabled="disabled" required>
                         </div>
                         <div class="form-group">
                             <label>Colonia: <span style="color: red">*</span></label>
                             <select class="form-control" name="colonia" id="colonia" required>
-                                <option value="CDMX"> Selecciona:  </option>
+                                <option value="Ninguno"> Selecciona:  </option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -59,6 +65,16 @@
                     <label>Descripción de los hechos: <span style="color: red">*</span></label>
                     <textarea class="form-control" name="descripcion" id="descripcion" rows="3" required></textarea>
                 </div>
+
+                @if(isset($fields))
+                    @foreach($fields as $field)
+                        <div class="form-group">
+                            <label>{{ $field }}</label>
+                            <input type="text" class="form-control" id="{{ $field }}" name="{{ $field }}" required>
+                        </div>
+                    @endforeach
+                @endif
+
                 <div class="form-group">
                     <label>Foto/Video:</label>
                     <input type="file" id="archivos" name="archivos" class="form-control" required>
@@ -166,7 +182,43 @@
             };
             inicio();
 
-            $('#boton').hide();
+            //$('#boton').hide();
+
+            $('#cp').on('input',function() {
+                var cp = $('#cp').val();
+                if (cp.length == 5){
+                    var cp = $('#cp').val();
+                    var form = new FormData();
+                    form.append('cp', cp);
+                    $.ajax({
+                        type: 'POST',
+                        url: '{{route('postal')}}',
+                        headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                        enctype: 'multipart/form-data',
+                        data: form,
+                        processData: false,
+                        contentType: false,
+                        cache: false,
+                        timeout: 600000,
+                        success: function (res) {
+                            if(res){
+                                $('#estado').val(res[0]['Estado']);
+                                $('#municipio').val(res[0]['Municipio']);
+                                for (var index in res){
+                                    console.log(index)
+                                    $("#colonia").append(new Option(res[index]['Asentamiento'], res[index]['Asentamiento']));
+                                }
+                                //$("#selectList").append(new Option("option text", "value"));
+                            }
+                        },
+                        error: function (res) {
+                            console.log(res);
+                            $("#modalFail #errmess").text("No se pudo encontrar el código postal");
+                            $("#modalFail").modal('show');
+                        }
+                    });
+                }
+            });
 
             if(navigator.geolocation){
                 navigator.geolocation.getCurrentPosition(function(position) {
@@ -217,10 +269,12 @@
                 var direccion = $("#direccion").val();
                 var descripcion = $("#descripcion").val();
                 var token = $("#j").val();
+                var fields = {!! json_encode($fields) !!};
+
 
                 if(usuario && nosotros && latitud && longitud && tipo && fecha && cp && estado && municipio && colonia && direccion && descripcion){
                     var form = new FormData($("#denuncia")[0]);
-                    $("#modalLoading").modal('show');
+                    //$("#modalLoading").modal('show');
                     form.append('usuario',usuario);
                     form.append('nosotros',nosotros);
                     form.append('latitud',latitud);
@@ -235,6 +289,15 @@
                     form.append('descripcion',descripcion);
                     form.append('token', token);
 
+                    if(fields){
+                        form.append('fields', fields);
+                        for(var field in fields){
+                            var campo = fields[field];
+                            var aux = $("#"+ campo).val();
+                            form.append(campo, aux);
+                        }
+                    }
+
                     /*console.log(usuario);
                     console.log(nosotros);
                     console.log(latitud);
@@ -246,8 +309,8 @@
                     console.log(municipio);
                     console.log(colonia);
                     console.log(direccion);
-                    console.log(descripcion);*/
-
+                    console.log(descripcion);
+                    */
                     $.ajax({
                         type: 'POST',
                         url: '{{route('insertar')}}',

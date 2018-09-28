@@ -13,5 +13,5 @@ Route::prefix('denuncia')->group(function(){
     //Denuncia
     Route::post('insertar', 'DenunciaController@insertarDenuncia')->name('insertar');
     Route::get('lista', 'DenunciaController@generarTokens')->name('tokens');
-    Route::get('postal', 'DenunciaController@buscaCodigoPostal')->name('postal');
+    Route::post('postal', 'DenunciaController@buscaCodigoPostal')->name('postal');
 });
