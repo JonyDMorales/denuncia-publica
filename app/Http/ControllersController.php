@@ -86,6 +86,11 @@ class DenunciaController extends Controller
             $denuncia->fecha = date('Y-m-d H:i:s', strtotime($request->fecha));
 
             if($request->has('fields')){
+                $denuncia->fields = $request->fields;
+                $campos = explode(' ', $request->fields);
+                foreach ($campos as $campo){
+                    $denuncia[$campo] = $request[$campo];
+                }
 
             }
 
@@ -140,10 +145,10 @@ class DenunciaController extends Controller
                 'Asentamiento' => 1,
                 'Municipio' => 1,
                 'Estado' => 1])->where('Codigo', '=', $cp)->get();
-            $codigo = utf8_encode($direccion[0]['Codigo']);
-            $colonia = utf8_encode($direccion[0]['Asentamiento']);
-            $municipio = utf8_encode($direccion[0]['Municipio']);
-            $estado = utf8_encode($direccion[0]['Estado']);
+            $codigo = $direccion[0]['Codigo'];
+            $colonia = $direccion[0]['Asentamiento'];
+            $municipio = $direccion[0]['Municipio'];
+            $estado = utf8_decode($direccion[0]['Estado']);
 
             $junto = array('codigo' => $codigo, 'colonia' => $colonia, 'municipio' => $municipio, 'estado' => $estado);
 

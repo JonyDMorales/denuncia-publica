@@ -182,7 +182,7 @@
             };
             inicio();
 
-            //$('#boton').hide();
+            $('#boton').hide();
 
             $('#cp').on('input',function() {
                 var cp = $('#cp').val();
@@ -205,10 +205,8 @@
                                 $('#estado').val(res[0]['Estado']);
                                 $('#municipio').val(res[0]['Municipio']);
                                 for (var index in res){
-                                    console.log(index)
                                     $("#colonia").append(new Option(res[index]['Asentamiento'], res[index]['Asentamiento']));
                                 }
-                                //$("#selectList").append(new Option("option text", "value"));
                             }
                         },
                         error: function (res) {
@@ -269,8 +267,7 @@
                 var direccion = $("#direccion").val();
                 var descripcion = $("#descripcion").val();
                 var token = $("#j").val();
-                var fields = {!! json_encode($fields) !!};
-
+                var fields = '{!! implode(' ', array_values($fields)) !!}';
 
                 if(usuario && nosotros && latitud && longitud && tipo && fecha && cp && estado && municipio && colonia && direccion && descripcion){
                     var form = new FormData($("#denuncia")[0]);
@@ -291,8 +288,9 @@
 
                     if(fields){
                         form.append('fields', fields);
-                        for(var field in fields){
-                            var campo = fields[field];
+                        var arr = fields.split(' ');
+                        for(var field in arr){
+                            var campo = arr[field];
                             var aux = $("#"+ campo).val();
                             form.append(campo, aux);
                         }
